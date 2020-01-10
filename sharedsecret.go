@@ -20,20 +20,17 @@ type Share struct {
 	x, y *big.Int
 }
 
-// Secret is secret.
-type Secret *big.Int
-
 // New creates n Shares and a secret. k defines the minimum number of shares that should be
 // collected in order to recover the secret. Recovering the secret can be done by calling Recover
 // with more than k Share objects.
-func New(n, k int64) ([]Share, Secret) {
+func New(n, k int64) (shares []Share, secret *big.Int) {
 	if n < k {
 		panic("Irrecoverable: not enough shares to reconstruct the secret.")
 	}
 	p := polynom.NewRandom(k)
 
 	// Create the shares which are the value of p at any point but x != 0. Choose x in [1..n].
-	shares := make([]Share, 0, n)
+	shares = make([]Share, 0, n)
 	for i := int64(1); i <= n; i++ {
 		x := big.NewInt(i)
 		y := p.ValueAt(x)
@@ -41,14 +38,14 @@ func New(n, k int64) ([]Share, Secret) {
 	}
 
 	// Secret is the value for x=0 which is the first coefficient (of x^0).
-	secret := Secret(p.Coeff(0))
+	secret = p.Coeff(0)
 
-	return shares, secret
+	return
 }
 
 // Recover the secret from shares. Notice that the number of shares that is used should be at least
 // the recover amount (k) that was used in order to create them in the New function.
-func Recover(shares []Share) Secret {
+func Recover(shares []Share) (secret *big.Int) {
 	// Convert the shares to a list of points x[i], y[i].
 	xs := make([]*big.Int, len(shares))
 	ys := make([]*big.Int, len(shares))
@@ -57,7 +54,7 @@ func Recover(shares []Share) Secret {
 		ys[i] = shares[i].y
 	}
 	// Evaluate the polynom that goes through all (x[i], y[i]) points at x=0.
-	return Secret(polynom.Interpolate(big.NewInt(0), xs, ys))
+	return polynom.Interpolate(big.NewInt(0), xs, ys)
 }
 
 // String dumps the share object to a string.
