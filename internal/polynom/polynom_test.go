@@ -9,17 +9,17 @@ import (
 
 func TestInterpolate(t *testing.T) {
 	t.Run("simple", func(t *testing.T) {
-		xs := []*big.Int{big.NewInt(0), big.NewInt(2)}
-		got := Interpolate(big.NewInt(1), xs, xs)
+		x := []*big.Int{big.NewInt(0), big.NewInt(2)}
+		got := Interpolate(big.NewInt(1), x, x)
 		assert.Equal(t, big.NewInt(1), got)
 	})
 
 	t.Run("at given points", func(t *testing.T) {
-		xs := []*big.Int{big.NewInt(1), big.NewInt(2), big.NewInt(3)}
-		ys := []*big.Int{big.NewInt(1), big.NewInt(2), big.NewInt(3)}
+		x := []*big.Int{big.NewInt(1), big.NewInt(12), big.NewInt(6)}
+		y := []*big.Int{big.NewInt(111), big.NewInt(15), big.NewInt(34)}
 
-		assert.Equal(t, big.NewInt(1), Interpolate(big.NewInt(1), xs, ys))
-		assert.Equal(t, big.NewInt(2), Interpolate(big.NewInt(2), xs, ys))
-		assert.Equal(t, big.NewInt(3), Interpolate(big.NewInt(3), xs, ys))
+		assert.Equal(t, big.NewInt(111), Interpolate(big.NewInt(1), x, y))
+		assert.Equal(t, big.NewInt(15), Interpolate(big.NewInt(12), x, y))
+		assert.Equal(t, big.NewInt(34), Interpolate(big.NewInt(6), x, y))
 	})
 }
