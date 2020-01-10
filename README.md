@@ -5,7 +5,7 @@
 [![GoDoc](https://godoc.org/github.com/posener/sharedsecret?status.svg)](http://godoc.org/github.com/posener/sharedsecret)
 [![goreadme](https://goreadme.herokuapp.com/badge/posener/sharedsecret.svg)](https://goreadme.herokuapp.com)
 
-sharedsecret is implementation of Shamir's Secret Sharing algorithm.
+Package sharedsecret is implementation of Shamir's Secret Sharing algorithm.
 
 Shamir's Secret Sharing is an algorithm in cryptography created by Adi Shamir. It is a form of
 secret sharing, where a secret is divided into parts, giving each participant its own unique
