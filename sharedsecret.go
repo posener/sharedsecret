@@ -29,7 +29,10 @@ type Share struct {
 // with more than k Share objects.
 func New(n, k int64) (shares []Share, secret *big.Int) {
 	if n < k {
-		panic("Irrecoverable: not enough shares to reconstruct the secret.")
+		panic("irrecoverable: not enough shares to reconstruct the secret.")
+	}
+	if k <= 0 {
+		panic("number of shares must be positive.")
 	}
 	p := polynom.NewRandom(k, prime128)
 
@@ -102,6 +105,5 @@ func prime128Value() *big.Int {
 	p := big.NewInt(2)
 	p.Exp(p, big.NewInt(127), nil)
 	p.Sub(p, big.NewInt(1))
-	println(p.BitLen())
 	return p
 }
