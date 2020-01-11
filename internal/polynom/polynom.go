@@ -6,17 +6,17 @@ import (
 	"math/big"
 )
 
-// prime128 is a large prime number that fits into 128 bits (value of 2<<127 - 1).
-var prime128 = prime128Value()
-
 // Polynom represents a big integer polynom.
 type Polynom struct {
 	// coeff are the coefficients of the polynom. coeff[i] is the coefficient of x^i.
 	coeff []*big.Int
+	// mod is the modulus for polynom arithmetics calculations.
+	mod *big.Int
 }
 
-// NewRandom returns a new random polynom of the given degree.
-func NewRandom(degree int64) Polynom {
+// NewRandom returns a new random polynom of the given degree, which is subjected to arithmetics of
+// the given modulus.
+func NewRandom(degree int64, modulus *big.Int) Polynom {
 	if degree <= 0 {
 		panic("deg must be positive number")
 	}
@@ -26,12 +26,12 @@ func NewRandom(degree int64) Polynom {
 		coeff = make([]*big.Int, degree)
 	)
 	for i := range coeff {
-		coeff[i], err = rand.Int(rand.Reader, prime128)
+		coeff[i], err = rand.Int(rand.Reader, modulus)
 		if err != nil {
 			panic(fmt.Sprintf("creating random int: %s", err))
 		}
 	}
-	return Polynom{coeff: coeff}
+	return Polynom{coeff: coeff, mod: modulus}
 }
 
 // Deg returns the degree of the polynom.
@@ -52,13 +52,14 @@ func (p Polynom) ValueAt(x0 *big.Int) *big.Int {
 	for i := len(p.coeff) - 1; i >= 0; i-- {
 		val.Mul(val, x0)
 		val.Add(val, p.coeff[i])
-		val.Mod(val, prime128)
+		val.Mod(val, p.mod)
 	}
 	return val
 }
 
-// Interpolate returns the y value at x0 of a polynom that lies on points (x[i], y[i]).
-func Interpolate(x0 *big.Int, x []*big.Int, y []*big.Int) (y0 *big.Int) {
+// Interpolate returns the y value at x0 of a polynom that lies on points (x[i], y[i]), with modulus
+// arithmetics for the given modulus.
+func Interpolate(x0 *big.Int, x []*big.Int, y []*big.Int, modulus *big.Int) (y0 *big.Int) {
 	if len(x) != len(y) {
 		panic("x and y lists must have the same length.")
 	}
@@ -75,16 +76,16 @@ func Interpolate(x0 *big.Int, x []*big.Int, y []*big.Int) (y0 *big.Int) {
 	den := product(dens, nil, -1)
 
 	num := big.NewInt(0)
-	for i := range x {
+	for i := range nums {
 		nums[i].Mul(nums[i], den)
 		nums[i].Mul(nums[i], y[i])
-		nums[i].Mod(nums[i], prime128)
-		num.Add(num, divmod(nums[i], dens[i]))
+		nums[i].Mod(nums[i], modulus)
+		num.Add(num, divmod(nums[i], dens[i], modulus))
 	}
 
-	y0 = divmod(num, den)
-	y0.Add(y0, prime128)
-	y0.Mod(y0, prime128)
+	y0 = divmod(num, den, modulus)
+	y0.Add(y0, modulus)
+	y0.Mod(y0, modulus)
 	return y0
 }
 
@@ -105,9 +106,9 @@ func product(vals []*big.Int, sub *big.Int, skip int) *big.Int {
 	return p
 }
 
-// divmod computes num / den modulo prime128.
-func divmod(a, b *big.Int) *big.Int {
-	return a.Mul(a, b.ModInverse(b, prime128))
+// divmod computes num / den modulo mod.
+func divmod(a, b, mod *big.Int) *big.Int {
+	return a.Mul(a, b.ModInverse(b, mod))
 }
 
 // cp copies a big.Int.
@@ -126,11 +127,4 @@ func assertDistinct(vals []*big.Int) {
 		}
 		s[v] = true
 	}
-}
-
-func prime128Value() *big.Int {
-	p := big.NewInt(2)
-	p.Exp(p, big.NewInt(127), nil)
-	p.Sub(p, big.NewInt(1))
-	return p
 }

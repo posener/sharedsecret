@@ -4,7 +4,8 @@
 // secret sharing, where a secret is divided into parts, giving each participant its own unique
 // part. To reconstruct the original secret, a minimum number of parts is required. In the threshold
 // scheme this number is less than the total number of parts. Otherwise all participants are needed
-// to reconstruct the original secret. See https://en.wikipedia.org/wiki/Shamir's_Secret_Sharing.
+// to reconstruct the original secret.
+// See (wiki page) https://en.wikipedia.org/wiki/Shamir's_Secret_Sharing.
 package sharedsecret
 
 import (
@@ -14,6 +15,9 @@ import (
 
 	"github.com/posener/sharedsecret/internal/polynom"
 )
+
+// prime128 is a large prime number that fits into 128 bits (value of 2^127 - 1).
+var prime128 = prime128Value()
 
 // Share is a part of a secret.
 type Share struct {
@@ -27,7 +31,7 @@ func New(n, k int64) (shares []Share, secret *big.Int) {
 	if n < k {
 		panic("Irrecoverable: not enough shares to reconstruct the secret.")
 	}
-	p := polynom.NewRandom(k)
+	p := polynom.NewRandom(k, prime128)
 
 	// Create the shares which are the value of p at any point but x != 0. Choose x in [1..n].
 	shares = make([]Share, 0, n)
@@ -54,7 +58,7 @@ func Recover(shares []Share) (secret *big.Int) {
 		ys[i] = shares[i].y
 	}
 	// Evaluate the polynom that goes through all (x[i], y[i]) points at x=0.
-	return polynom.Interpolate(big.NewInt(0), xs, ys)
+	return polynom.Interpolate(big.NewInt(0), xs, ys, prime128)
 }
 
 // String dumps the share object to a string.
@@ -88,4 +92,16 @@ func (s *Share) UnmarshalText(txt []byte) error {
 		return err
 	}
 	return s.y.UnmarshalText(parts[1])
+}
+
+// prime128 returns a large prime that fits into 128 bits. It is 12th Mersenne Prime. (for this
+// application we want a known prime number as close as possible to our security level; e.g. desired
+// security level of 128 bits -- too large and all the ciphertext is large; too small and security
+// is compromised) It is equal to 2^127 - 1. (13th Mersenne Prime is 2^521 - 1).
+func prime128Value() *big.Int {
+	p := big.NewInt(2)
+	p.Exp(p, big.NewInt(127), nil)
+	p.Sub(p, big.NewInt(1))
+	println(p.BitLen())
+	return p
 }
