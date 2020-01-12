@@ -14,6 +14,28 @@ scheme this number is less than the total number of parts. Otherwise all partici
 to reconstruct the original secret.
 See [wiki page](https://en.wikipedia.org/wiki/Shamir's_Secret_Sharing).
 
+#### Examples
+
+```golang
+// Create 5 shares that 3 or more of them can recover the secret.
+shares, secret := New(5, 3)
+
+// We can't recover from only 2 shares:
+wrong := Recover(shares[1], shares[3])
+
+// We can recover from only 3 (or more) shares:
+correct := Recover(shares[1], shares[3], shares[0])
+
+fmt.Println(secret.Cmp(wrong) != 0, secret.Cmp(correct) == 0)
+```
+
+ Output:
+
+```
+true true
+
+```
+
 
 ---
 
