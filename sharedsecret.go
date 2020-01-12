@@ -52,7 +52,7 @@ func New(n, k int64) (shares []Share, secret *big.Int) {
 
 // Recover the secret from shares. Notice that the number of shares that is used should be at least
 // the recover amount (k) that was used in order to create them in the New function.
-func Recover(shares []Share) (secret *big.Int) {
+func Recover(shares ...Share) (secret *big.Int) {
 	// Convert the shares to a list of points x[i], y[i].
 	xs := make([]*big.Int, len(shares))
 	ys := make([]*big.Int, len(shares))
