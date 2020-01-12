@@ -49,11 +49,15 @@ func TestNewRandom(t *testing.T) {
 
 func TestNewRandom_def2Fuzz(t *testing.T) {
 	t.Parallel()
-	mod := big.NewInt(11)
-	p := NewRandom(2, mod)
 	for i := 0; i < 10000; i++ {
 		x, err := rand.Int(rand.Reader, big.NewInt(10000))
 		require.NoError(t, err)
+
+		mod, err := rand.Int(rand.Reader, big.NewInt(10000))
+		mod.Add(mod, big.NewInt(1)) // mod should be greater than 0
+		require.NoError(t, err)
+
+		p := NewRandom(2, mod)
 
 		want := cp(p.Coeff(1))
 		want.Mul(want, x)
