@@ -2,6 +2,7 @@ package sharedsecret
 
 import (
 	"crypto/rand"
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -9,21 +10,39 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Example() {
+	// Create 5 shares that 3 or more of them can recover the secret.
+	shares, secret := New(5, 3)
+
+	// Now we should distribute the shares to different parties and forget about the shares and
+	// secret. Once the original secret is needed, at least 3 shares should be used in order to
+	// recover it:
+
+	// We can't recover from only 2 shares:
+	wrong := Recover(shares[1], shares[3])
+
+	// We can recover from only 3 (or more) shares:
+	correct := Recover(shares[1], shares[3], shares[0])
+
+	fmt.Println(secret.Cmp(wrong) != 0, secret.Cmp(correct) == 0)
+	// Output: true true
+}
+
 func TestRecover_sanity(t *testing.T) {
 	t.Parallel()
 	// Create 10 shares that 4 or more of them can recover the secret.
 	shares, secret := New(10, 4)
 
 	// All shares should recover.
-	assert.Equal(t, secret, Recover(shares))
+	assert.Equal(t, secret, Recover(shares...))
 
 	// The minimum number of shares should recover.
-	assert.Equal(t, secret, Recover(shares[:4]))
-	assert.Equal(t, secret, Recover(shares[4:]))
+	assert.Equal(t, secret, Recover(shares[:4]...))
+	assert.Equal(t, secret, Recover(shares[4:]...))
 
 	// Less than the minimum number of shares should not recover.
-	assert.NotEqual(t, secret, Recover(shares[:3]))
-	assert.NotEqual(t, secret, Recover(shares[7:]))
+	assert.NotEqual(t, secret, Recover(shares[:3]...))
+	assert.NotEqual(t, secret, Recover(shares[7:]...))
 }
 
 func TestRecover_panic(t *testing.T) {
