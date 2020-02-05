@@ -28,6 +28,20 @@ type Share struct {
 // collected in order to recover the secret. Recovering the secret can be done by calling Recover
 // with more than k Share objects.
 func New(n, k int64) (shares []Share, secret *big.Int) {
+	return distribute(nil, n, k)
+}
+
+// Distribute creates n Shares for a given secret. k defines the minimum number of shares that
+// should be collected in order to recover the secret. Recovering the secret can be done by calling
+// Recover with more than k Share objects.
+func Distribute(secret *big.Int, n, k int64) (shares []Share) {
+	shares, _ = distribute(secret, n, k)
+	return shares
+}
+
+// distribute creates n shares. The secret argument is optional. It returns the shares and the
+// secret for the shares.
+func distribute(secret *big.Int, n, k int64) ([]Share, *big.Int) {
 	if n < k {
 		panic("irrecoverable: not enough shares to reconstruct the secret.")
 	}
@@ -36,18 +50,25 @@ func New(n, k int64) (shares []Share, secret *big.Int) {
 	}
 	p := polynom.NewRandom(k, prime128)
 
+	// Set the first coefficient to the secret (the value at x=0) if the secret was given. And
+	// anyway store the first coefficient in the secret variable.
+	if secret != nil {
+		if secret.Cmp(prime128) > 0 {
+			panic("secret value is too big (must be lower than 2^127 - 1)")
+		}
+		p.SetCoeff(0, secret)
+	}
+	secret = p.Coeff(0)
+
 	// Create the shares which are the value of p at any point but x != 0. Choose x in [1..n].
-	shares = make([]Share, 0, n)
+	shares := make([]Share, 0, n)
 	for i := int64(1); i <= n; i++ {
 		x := big.NewInt(i)
 		y := p.ValueAt(x)
 		shares = append(shares, Share{x: x, y: y})
 	}
 
-	// Secret is the value for x=0 which is the first coefficient (of x^0).
-	secret = p.Coeff(0)
-
-	return
+	return shares, secret
 }
 
 // Recover the secret from shares. Notice that the number of shares that is used should be at least
