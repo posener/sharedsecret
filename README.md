@@ -16,6 +16,34 @@ See [wiki page](https://en.wikipedia.org/wiki/Shamir's_Secret_Sharing).
 
 #### Examples
 
+##### Distribute
+
+With the `Distribute` function, a given secret can be distributed to shares.
+
+```golang
+secret := big.NewInt(120398491412912873)
+
+// Create 5 shares that 3 or more of them can recover the secret.
+shares := Distribute(secret, 5, 3)
+
+// We can recover from only 3 (or more) shares:
+recovered := Recover(shares[1], shares[3], shares[0])
+
+fmt.Println(recovered)
+```
+
+ Output:
+
+```
+120398491412912873
+
+```
+
+##### New
+
+With the `New` function, a random secret is generated and distributed into shares. Both the
+secret and the shares are returned.
+
 ```golang
 // Create 5 shares that 3 or more of them can recover the secret.
 shares, secret := New(5, 3)
