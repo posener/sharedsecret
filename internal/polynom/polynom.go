@@ -46,6 +46,14 @@ func (p Polynom) Coeff(i int) *big.Int {
 	return cp(p.coeff[i])
 }
 
+// SetCoeff sets the i'th coefficient.
+//
+// Can panic with index out of range when i >= p.Deg().
+func (p Polynom) SetCoeff(i int, v *big.Int) {
+	v = cp(v)
+	p.coeff[i] = v.Mod(v, p.mod)
+}
+
 // ValueAt returns the y value of the polynom on a given x0 value.
 func (p Polynom) ValueAt(x0 *big.Int) *big.Int {
 	val := big.NewInt(0)

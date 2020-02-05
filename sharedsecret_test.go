@@ -10,7 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Example() {
+// With the `New` function, a random secret is generated and distributed into shares. Both the
+// secret and the shares are returned.
+func Example_new() {
 	// Create 5 shares that 3 or more of them can recover the secret.
 	shares, secret := New(5, 3)
 
@@ -28,21 +30,58 @@ func Example() {
 	// Output: true true
 }
 
-func TestRecover_sanity(t *testing.T) {
+// With the `Distribute` function, a given secret can be distributed to shares.
+func Example_distribute() {
+	secret := big.NewInt(120398491412912873)
+
+	// Create 5 shares that 3 or more of them can recover the secret.
+	shares := Distribute(secret, 5, 3)
+
+	// We can recover from only 3 (or more) shares:
+	recovered := Recover(shares[1], shares[3], shares[0])
+
+	fmt.Println(recovered)
+	// Output: 120398491412912873
+}
+
+const (
+	testN = 10
+	testK = 4
+)
+
+func TestNewRecover_sanity(t *testing.T) {
 	t.Parallel()
-	// Create 10 shares that 4 or more of them can recover the secret.
-	shares, secret := New(10, 4)
+
+	// Create testN shares that testK or more of them can recover the secret.
+	shares, secret := New(testN, testK)
+
+	testSharesAndSecret(t, shares, secret)
+}
+
+func TestDistributeRecover_sanity(t *testing.T) {
+	t.Parallel()
+
+	// Create a secret and distribute it to testN shares that testK or more of them can recover the
+	// secret.
+	secret := big.NewInt(123456)
+	shares := Distribute(secret, testN, testK)
+
+	testSharesAndSecret(t, shares, secret)
+}
+
+func testSharesAndSecret(t *testing.T, shares []Share, secret *big.Int) {
+	t.Helper()
 
 	// All shares should recover.
 	assert.Equal(t, secret, Recover(shares...))
 
 	// The minimum number of shares should recover.
-	assert.Equal(t, secret, Recover(shares[:4]...))
-	assert.Equal(t, secret, Recover(shares[4:]...))
+	assert.Equal(t, secret, Recover(shares[:testK]...))
+	assert.Equal(t, secret, Recover(shares[testK:]...))
 
 	// Less than the minimum number of shares should not recover.
-	assert.NotEqual(t, secret, Recover(shares[:3]...))
-	assert.NotEqual(t, secret, Recover(shares[7:]...))
+	assert.NotEqual(t, secret, Recover(shares[:testK-1]...))
+	assert.NotEqual(t, secret, Recover(shares[testN-testK+1:]...))
 }
 
 func TestRecover_panic(t *testing.T) {
