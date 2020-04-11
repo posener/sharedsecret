@@ -1,9 +1,7 @@
 # sharedsecret
 
-[![Build Status](https://travis-ci.org/posener/sharedsecret.svg?branch=master)](https://travis-ci.org/posener/sharedsecret)
 [![codecov](https://codecov.io/gh/posener/sharedsecret/branch/master/graph/badge.svg)](https://codecov.io/gh/posener/sharedsecret)
-[![GoDoc](https://godoc.org/github.com/posener/sharedsecret?status.svg)](http://godoc.org/github.com/posener/sharedsecret)
-[![goreadme](https://goreadme.herokuapp.com/badge/posener/sharedsecret.svg)](https://goreadme.herokuapp.com)
+[![GoDoc](https://img.shields.io/badge/pkg.go.dev-doc-blue)](http://pkg.go.dev/github.com/posener/sharedsecret)
 
 Package sharedsecret is implementation of Shamir's Secret Sharing algorithm.
 
@@ -14,9 +12,9 @@ scheme this number is less than the total number of parts. Otherwise all partici
 to reconstruct the original secret.
 See [wiki page](https://en.wikipedia.org/wiki/Shamir's_Secret_Sharing).
 
-#### Examples
+## Examples
 
-##### Distribute
+### Distribute
 
 With the `Distribute` function, a given secret can be distributed to shares.
 
@@ -36,10 +34,9 @@ fmt.Println(recovered)
 
 ```
 120398491412912873
-
 ```
 
-##### New
+### New
 
 With the `New` function, a random secret is generated and distributed into shares. Both the
 secret and the shares are returned.
@@ -65,10 +62,7 @@ fmt.Println(secret.Cmp(wrong) != 0, secret.Cmp(correct) == 0)
 
 ```
 true true
-
 ```
 
-
 ---
-
-Created by [goreadme](https://github.com/apps/goreadme)
+Readme created from Go doc with [goreadme](https://github.com/posener/goreadme)
