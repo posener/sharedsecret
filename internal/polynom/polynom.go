@@ -69,9 +69,8 @@ func (p Polynom) ValueAt(x0 *big.Int) *big.Int {
 // arithmetics for the given modulus.
 func Interpolate(x0 *big.Int, x []*big.Int, y []*big.Int, modulus *big.Int) (y0 *big.Int) {
 	if len(x) != len(y) {
-		panic("x and y lists must have the same length.")
+		return nil // x and y lists must have the same length.
 	}
-	assertDistinct(x)
 
 	nums := make([]*big.Int, len(x))
 	dens := make([]*big.Int, len(x))
@@ -88,7 +87,11 @@ func Interpolate(x0 *big.Int, x []*big.Int, y []*big.Int, modulus *big.Int) (y0 
 		nums[i].Mul(nums[i], den)
 		nums[i].Mul(nums[i], y[i])
 		nums[i].Mod(nums[i], modulus)
-		num.Add(num, divmod(nums[i], dens[i], modulus))
+		v := divmod(nums[i], dens[i], modulus)
+		if v == nil {
+			return nil // x values are not distinct.
+		}
+		num.Add(num, v)
 	}
 
 	y0 = divmod(num, den, modulus)
@@ -116,7 +119,11 @@ func product(vals []*big.Int, sub *big.Int, skip int) *big.Int {
 
 // divmod computes num / den modulo mod.
 func divmod(a, b, mod *big.Int) *big.Int {
-	return a.Mul(a, b.ModInverse(b, mod))
+	b = b.ModInverse(b, mod)
+	if b == nil {
+		return nil
+	}
+	return a.Mul(a, b)
 }
 
 // cp copies a big.Int.
@@ -124,15 +131,4 @@ func cp(v *big.Int) *big.Int {
 	var u big.Int
 	u.Set(v)
 	return &u
-}
-
-// assertDistinct panics if there are two identical values in vals.
-func assertDistinct(vals []*big.Int) {
-	s := make(map[*big.Int]bool, len(vals))
-	for _, v := range vals {
-		if s[v] {
-			panic("points must be distinct")
-		}
-		s[v] = true
-	}
 }

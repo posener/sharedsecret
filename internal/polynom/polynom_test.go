@@ -30,13 +30,13 @@ func TestInterpolate(t *testing.T) {
 
 func TestInterpolate_panic(t *testing.T) {
 	t.Parallel()
-	// Different array sizes.
-	assert.Panics(t, func() {
-		Interpolate(big.NewInt(0), []*big.Int{big.NewInt(1), big.NewInt(2)}, []*big.Int{big.NewInt(1)}, big.NewInt(11))
+	t.Run("Different array sizes", func(t *testing.T) {
+		result := Interpolate(big.NewInt(0), []*big.Int{big.NewInt(1), big.NewInt(2)}, []*big.Int{big.NewInt(1)}, big.NewInt(11))
+		assert.Nil(t, result)
 	})
-	// x points are not unique.
-	assert.Panics(t, func() {
-		Interpolate(big.NewInt(0), []*big.Int{big.NewInt(1), big.NewInt(1)}, []*big.Int{big.NewInt(1), big.NewInt(2)}, big.NewInt(11))
+	t.Run("x points are not unique", func(t *testing.T) {
+		result := Interpolate(big.NewInt(0), []*big.Int{big.NewInt(1), big.NewInt(1)}, []*big.Int{big.NewInt(1), big.NewInt(2)}, big.NewInt(11))
+		assert.Nil(t, result)
 	})
 }
 

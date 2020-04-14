@@ -70,24 +70,40 @@ func TestDistributeRecover_sanity(t *testing.T) {
 }
 
 func testSharesAndSecret(t *testing.T, shares []Share, secret *big.Int) {
-	t.Helper()
+	t.Run("All shares should recover", func(t *testing.T) {
+		assert.Equal(t, secret, Recover(shares...))
+	})
 
-	// All shares should recover.
-	assert.Equal(t, secret, Recover(shares...))
+	t.Run("The minimum number of shares should recover", func(t *testing.T) {
+		assert.Equal(t, secret, Recover(shares[:testK]...))
+		assert.Equal(t, secret, Recover(shares[testK:]...))
+	})
 
-	// The minimum number of shares should recover.
-	assert.Equal(t, secret, Recover(shares[:testK]...))
-	assert.Equal(t, secret, Recover(shares[testK:]...))
+	t.Run("Less than the minimum number of shares should not recover", func(t *testing.T) {
+		assert.NotEqual(t, secret, Recover(shares[:testK-1]...))
+		assert.NotEqual(t, secret, Recover(shares[testN-testK+1:]...))
+	})
 
-	// Less than the minimum number of shares should not recover.
-	assert.NotEqual(t, secret, Recover(shares[:testK-1]...))
-	assert.NotEqual(t, secret, Recover(shares[testN-testK+1:]...))
+	t.Run("minimum number with repeated share should not recover", func(t *testing.T) {
+		shares := shares[:testK-1]
+		shares = append(shares, shares[0])
+		assert.NotEqual(t, secret, Recover(shares...))
+		assert.NotEqual(t, secret, Recover(shares...))
+	})
 }
 
-func TestRecover_panic(t *testing.T) {
+func TestNew_panic(t *testing.T) {
 	t.Parallel()
+
+	secret := big.NewInt(123456)
+	secretTooBig := big.NewInt(2)
+	secretTooBig.Exp(secretTooBig, big.NewInt(127), nil)
+
 	assert.Panics(t, func() { New(1, 2) })
 	assert.Panics(t, func() { New(1, 0) })
+	assert.Panics(t, func() { Distribute(secret, 1, 2) })
+	assert.Panics(t, func() { Distribute(secret, 1, 0) })
+	assert.Panics(t, func() { Distribute(secretTooBig, testN, testK) })
 }
 
 func TestShareString(t *testing.T) {
