@@ -10,6 +10,7 @@ package sharedsecret
 
 import (
 	"bytes"
+	"crypto/rand"
 	"errors"
 	"math/big"
 
@@ -60,10 +61,34 @@ func distribute(secret *big.Int, n, k int64) ([]Share, *big.Int) {
 	}
 	secret = p.Coeff(0)
 
-	// Create the shares which are the value of p at any point but x != 0. Choose x in [1..n].
+	// Stores "have we already generated this X coordinate?". Keys are string representations of the
+	// coordinates because big.Int can't be map keys.
+	seen := make(map[string]bool)
+
+	// Used for comparing randomized X-coordinates. They must never be zero, since that's where the
+	// secret is.
+	zero := big.NewInt(0)
+
+	// Create the shares which are the value of p at any point but x != 0. x is chosen randomly to
+	// prevent leaking "how many shares are there?" information.
 	shares := make([]Share, 0, n)
 	for i := int64(1); i <= n; i++ {
-		x := big.NewInt(i)
+		x, err := rand.Int(rand.Reader, prime128)
+		if err != nil {
+			panic("creating random int: " + err.Error())
+		}
+
+		// Make sure that x is not zero and that we haven't re-generated an X from a previous iteration.
+		// This is very unlikely to happen anyway, but better safe than sorry.
+		for x.Cmp(zero) == 0 || seen[x.String()] {
+			x, err = rand.Int(rand.Reader, prime128)
+			if err != nil {
+				panic("creating random int: " + err.Error())
+			}
+		}
+
+		seen[x.String()] = true
+
 		y := p.ValueAt(x)
 		shares = append(shares, Share{x: x, y: y})
 	}
